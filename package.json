@@ -1,0 +1,21 @@
+{
+  "name": "palal",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "node ./scripts/migrate.js --build && echo 'Build complete'",
+    "migrate:local": "node ./scripts/migrate.js --local",
+    "migrate:remote": "node ./scripts/migrate.js --remote",
+    "start": "npm run migrate:local && npm run serve",
+    "dev": "npm run migrate:local && netlify dev",
+    "serve": "npx serve ./public",
+    "netlify:dev": "netlify dev"
+  },
+  "dependencies": {
+    "better-sqlite3": "^8.4.0",
+    "pg": "^8.11.0"
+  },
+  "devDependencies": {
+    "serve": "^14.2.2"
+  }
+}
