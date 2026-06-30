@@ -10,12 +10,12 @@ A static frontend seeded from `Palal25.1 copy.html` with a Netlify Functions pla
    npm install
    ```
 
-2. Run locally with SQLite migration and static site:
+2. Serve the static site locally:
    ```bash
    npm run start
    ```
 
-3. Run local development with Netlify functions:
+3. Run local Netlify development:
    ```bash
    npm run dev
    ```
@@ -72,8 +72,8 @@ Netlify uses `npm run build` from `package.json`. That command now executes:
 - `node ./scripts/migrate.js --build`
 
 During Netlify build:
-- if `SUPABASE_DB_URL` is set, it migrates Supabase
-- otherwise it falls back to local SQLite (not desired for deployment)
+- if `SUPABASE_DB_URL` is set, it runs the remote migration against Supabase
+- otherwise it skips schema migration for now so the build can complete
 
 ### 6. Manual Supabase migration test
 
@@ -86,10 +86,10 @@ npm run migrate:remote
 
 ## Local workflow
 
-- `npm run start` — runs local SQLite migration and serves `public`.
-- `npm run dev` — runs local SQLite migration and starts `netlify dev`.
-- `npm run migrate:local` — only run the local SQLite migration.
-- `npm run migrate:remote` — only run the Supabase migration (requires `SUPABASE_DB_URL`).
+- `npm run start` — serves the static site from `public`.
+- `npm run dev` — starts the local Netlify dev server.
+- `npm run migrate:local` — currently a no-op while local SQLite support is paused.
+- `npm run migrate:remote` — runs the Supabase migration when `SUPABASE_DB_URL` is set.
 
 ## Project structure
 

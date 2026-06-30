@@ -1,11 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 const { Client } = require('pg');
-const Database = require('better-sqlite3');
 
 const ROOT = path.resolve(__dirname, '..');
 const SCHEMA_SQL = path.join(ROOT, 'schema.sql');
-const SQLITE_DB = path.join(ROOT, 'data', 'palal.sqlite');
 
 function loadSchema() {
   return fs.readFileSync(SCHEMA_SQL, 'utf8');
@@ -66,34 +64,8 @@ function splitSqlStatements(sql) {
   return statements;
 }
 
-function ensureDataDirectory() {
-  const dataDir = path.join(ROOT, 'data');
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
-  }
-}
-
 function runLocalMigration() {
-  ensureDataDirectory();
-  const raw = loadSchema();
-  const sqliteSchema = transformForSqlite(raw);
-  const db = new Database(SQLITE_DB);
-  db.pragma('foreign_keys = ON');
-
-  db.exec(`CREATE TABLE IF NOT EXISTS auth_users (id TEXT PRIMARY KEY, email TEXT UNIQUE, created_at TEXT DEFAULT (CURRENT_TIMESTAMP));`);
-
-  const statements = splitSqlStatements(sqliteSchema);
-  for (const statement of statements) {
-    if (!statement) continue;
-    try {
-      db.exec(statement);
-    } catch (err) {
-      console.error('SQLite migration failed on statement:', statement);
-      throw err;
-    }
-  }
-  db.close();
-  console.log(`Local SQLite database migrated: ${SQLITE_DB}`);
+  console.log('Local SQLite migration is temporarily disabled. Skipping for now.');
 }
 
 async function runRemoteMigration() {
@@ -139,11 +111,10 @@ async function main() {
   if (isBuild) {
     const connectionString = process.env.SUPABASE_DB_URL || process.env.DATABASE_URL;
     if (connectionString) {
-      console.log('SUPABASE_DB_URL found, running remote migration.');
+      console.log('Remote database configured, running remote migration.');
       await runRemoteMigration();
     } else {
-      console.log('No SUPABASE_DB_URL found, falling back to local SQLite migration.');
-      runLocalMigration();
+      console.log('No remote database configured. Skipping schema migration for build.');
     }
     return;
   }
