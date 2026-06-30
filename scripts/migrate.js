@@ -64,6 +64,23 @@ function splitSqlStatements(sql) {
   return statements;
 }
 
+function buildRemoteClientConfig(connectionString) {
+  const parsed = new URL(connectionString);
+  const database = parsed.pathname.replace(/^\/+/, '');
+
+  return {
+    host: parsed.hostname,
+    port: Number(parsed.port) || 5432,
+    user: decodeURIComponent(parsed.username),
+    password: decodeURIComponent(parsed.password),
+    database,
+    ssl: { rejectUnauthorized: false },
+    family: 4,
+    connectionTimeoutMillis: 20000,
+    statement_timeout: 60000,
+  };
+}
+
 function runLocalMigration() {
   console.log('Local SQLite migration is temporarily disabled. Skipping for now.');
 }
@@ -79,7 +96,8 @@ async function runRemoteMigration() {
     return stmt.replace(/CREATE TABLE public\./gi, 'CREATE TABLE IF NOT EXISTS public.');
   });
 
-  const client = new Client({ connectionString, ssl: { rejectUnauthorized: false } });
+  const client = new Client(buildRemoteClientConfig(connectionString));
+
   await client.connect();
   try {
     for (const statement of statements) {
@@ -112,11 +130,7 @@ async function main() {
     const connectionString = process.env.SUPABASE_DB_URL || process.env.DATABASE_URL;
     if (connectionString) {
       console.log('Remote database configured, attempting remote migration.');
-      try {
-        await runRemoteMigration();
-      } catch (err) {
-        console.warn('Remote migration failed, skipping it so the build can continue.', err.message);
-      }
+      await runRemoteMigration();
     } else {
       console.log('No remote database configured. Skipping schema migration for build.');
     }
