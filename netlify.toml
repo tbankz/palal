@@ -3,6 +3,9 @@
   functions = "netlify/functions"
   publish = "public"
 
+[build.environment]
+  NODE_OPTIONS = "--dns-result-order=ipv4first"
+
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
