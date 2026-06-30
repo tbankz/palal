@@ -111,8 +111,12 @@ async function main() {
   if (isBuild) {
     const connectionString = process.env.SUPABASE_DB_URL || process.env.DATABASE_URL;
     if (connectionString) {
-      console.log('Remote database configured, running remote migration.');
-      await runRemoteMigration();
+      console.log('Remote database configured, attempting remote migration.');
+      try {
+        await runRemoteMigration();
+      } catch (err) {
+        console.warn('Remote migration failed, skipping it so the build can continue.', err.message);
+      }
     } else {
       console.log('No remote database configured. Skipping schema migration for build.');
     }
