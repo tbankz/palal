@@ -1,6 +1,9 @@
 const fs = require('fs');
 const path = require('path');
+const dns = require('dns');
 const { Client } = require('pg');
+
+dns.setDefaultResultOrder('ipv4first');
 
 const ROOT = path.resolve(__dirname, '..');
 const SCHEMA_SQL = path.join(ROOT, 'schema.sql');
