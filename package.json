@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "node ./scripts/migrate.js --build && echo 'Build complete'",
+    "build": "npm run build:netlify",
+    "build:netlify": "echo 'Netlify build complete'",
     "migrate:local": "node ./scripts/migrate.js --local",
     "migrate:remote": "node ./scripts/migrate.js --remote",
     "start": "npm run serve",

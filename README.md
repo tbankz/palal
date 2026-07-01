@@ -25,6 +25,8 @@ A static frontend seeded from `Palal25.1 copy.html` with a Netlify Functions pla
    npm run build
    ```
 
+The build is currently static-only so Netlify can publish without depending on a reachable database.
+
 ## Supabase + Netlify setup
 
 ### 1. Create the Supabase project
