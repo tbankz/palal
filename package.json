@@ -13,6 +13,7 @@
     "netlify:dev": "netlify dev"
   },
   "dependencies": {
+    "@netlify/identity": "^1.2.0",
     "pg": "^8.11.0"
   },
   "devDependencies": {
