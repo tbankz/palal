@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "npm run build:netlify",
-    "build:netlify": "echo 'Netlify build complete'",
+    "build:netlify": "mkdir -p public && echo 'Netlify build complete'",
     "migrate:local": "node ./scripts/migrate.js --local",
     "migrate:remote": "node ./scripts/migrate.js --remote",
     "start": "npm run serve",
