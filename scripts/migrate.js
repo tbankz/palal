@@ -146,13 +146,7 @@ async function main() {
   }
 
   if (isBuild) {
-    const connectionString = process.env.SUPABASE_DB_URL || process.env.DATABASE_URL;
-    if (connectionString) {
-      console.log('Remote database configured, attempting remote migration.');
-      await runRemoteMigration();
-    } else {
-      console.log('No remote database configured. Skipping schema migration for build.');
-    }
+    console.log('Skipping remote migration during build so the site can publish without a reachable database.');
     return;
   }
 
