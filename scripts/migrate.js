@@ -67,12 +67,12 @@ function splitSqlStatements(sql) {
   return statements;
 }
 
-function buildRemoteClientConfig(connectionString) {
+function buildRemoteClientConfig(connectionString, resolvedHost) {
   const parsed = new URL(connectionString);
   const database = parsed.pathname.replace(/^\/+/, '');
 
   return {
-    host: parsed.hostname,
+    host: resolvedHost || parsed.hostname,
     port: Number(parsed.port) || 5432,
     user: decodeURIComponent(parsed.username),
     password: decodeURIComponent(parsed.password),
@@ -82,6 +82,18 @@ function buildRemoteClientConfig(connectionString) {
     connectionTimeoutMillis: 20000,
     statement_timeout: 60000,
   };
+}
+
+function resolveIpv4Host(hostname) {
+  return new Promise((resolve, reject) => {
+    dns.lookup(hostname, { family: 4, all: false }, (err, address) => {
+      if (err) {
+        reject(new Error(`Unable to resolve ${hostname} to an IPv4 address: ${err.message}`));
+        return;
+      }
+      resolve(address);
+    });
+  });
 }
 
 function runLocalMigration() {
@@ -99,7 +111,11 @@ async function runRemoteMigration() {
     return stmt.replace(/CREATE TABLE public\./gi, 'CREATE TABLE IF NOT EXISTS public.');
   });
 
-  const client = new Client(buildRemoteClientConfig(connectionString));
+  const parsedConnection = new URL(connectionString);
+  const resolvedHost = await resolveIpv4Host(parsedConnection.hostname);
+  console.log(`Resolved ${parsedConnection.hostname} to IPv4 ${resolvedHost}`);
+
+  const client = new Client(buildRemoteClientConfig(connectionString, resolvedHost));
 
   await client.connect();
   try {
