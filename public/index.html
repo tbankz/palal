@@ -2612,9 +2612,9 @@ document.getElementById('planInput').addEventListener('keypress', e => { if (e.k
 function initializeDefaultCircles() {
   if (D.circles.length === 0) {
     D.circles = [
-      { id: 1, name: 'Family', type: 'personal', icon: '◯', members: 5, prayers: 12, answered: 3, active: true, membersList: ['Ana', 'Ashish', 'Mariana'], lastActivity: '2min ago' },
-      { id: 2, name: 'Church', type: 'community', icon: '◈', members: 23, prayers: 78, answered: 6, active: true, membersList: ['Oğuz', 'MDS', 'Natko'], lastActivity: '1h ago' },
-      { id: 3, name: 'Work', type: 'personal', icon: '✦', members: 8, prayers: 23, answered: 2, active: true, membersList: ['Afshin', 'Ana', 'MDS'], lastActivity: '3h ago' }
+      { id: 1, name: 'Family', type: 'personal', icon: '◯', members: 5, prayers: 12, answered: 3, active: true, membersList: [], lastActivity: '2min ago' },
+      { id: 2, name: 'Church', type: 'community', icon: '◈', members: 23, prayers: 78, answered: 6, active: true, membersList: [], lastActivity: '1h ago' },
+      { id: 3, name: 'Work', type: 'personal', icon: '✦', members: 8, prayers: 23, answered: 2, active: true, membersList: [], lastActivity: '3h ago' }
     ];
     saveLocal();
   }
@@ -2712,6 +2712,24 @@ function renderCircles() {
             <div class="members">${circle.members || 1} members · ${circle.type}</div>
           </div>
           <button class="join-btn" onclick="joinCircle(${index})">Join</button>
+           <button onclick="deleteCircle(${index})" style="color:red;cursor:pointer;background:none;border:none;font-size:12px;">✕</button>
+           function deleteCircle(index) {
+  if (!confirm('Delete this circle?')) return;
+  
+  // Get circles from localStorage
+  const circles = JSON.parse(localStorage.getItem('circles')) || [];
+  
+  // Remove the circle at the given index
+  circles.splice(index, 1);
+  
+  // Save back to localStorage
+  localStorage.setItem('circles', JSON.stringify(circles));
+  
+  // Refresh the display
+  renderCircles();
+  
+  toast('✕ Circle deleted');
+}
         </div>`;
       });
     }
