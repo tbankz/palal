@@ -1461,6 +1461,59 @@ body{background:var(--bg);color:var(--ink);font-family:var(--sans);min-height:10
 .toast.show { opacity:1;transform:translateX(-50%) translateY(0); }
 
 @media (max-width:375px){ .vital-row{padding:0.5rem 0.75rem}.dna-metrics{grid-template-columns:repeat(2,1fr);gap:0.375rem}.dna-panel{padding:1rem 1rem 2rem}.mode-label{width:3rem;font-size:0.375rem}.enclosure{padding:2rem 1rem 1.5rem}.circles-grid{grid-template-columns:1fr 1fr}.guide-chars{grid-template-columns:repeat(3,1fr)}.prayer-mode-themes{grid-template-columns:repeat(3,1fr)} }
+/* ─── TUTORIAL OVERLAY ─── */
+.tutorial-overlay{
+  position:absolute;inset:0;
+  background:var(--bg);
+  z-index:600;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:48px 32px 40px;
+  border-radius:44px;
+  opacity:0;visibility:hidden;
+  transition:opacity 0.7s var(--ease),visibility 0s 0.7s;
+  pointer-events:none;
+}
+.tutorial-overlay.active{
+  opacity:1;visibility:visible;
+  transition:opacity 0.7s var(--ease),visibility 0s 0s;
+  pointer-events:auto;
+}
+.tutorial-step{
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
+  width:100%;
+  max-width:280px;
+  animation:fadeWord 0.5s ease forwards;
+}
+.tutorial-step.active{display:flex;}
+.tutorial-icon{font-size:28px;color:var(--gold);opacity:0.5;margin-bottom:20px;font-family:var(--serif);}
+.tutorial-title{font-size:14px;font-weight:400;letter-spacing:0.12em;color:var(--gold);margin-bottom:10px;font-family:var(--serif);}
+.tutorial-body{font-size:10px;color:var(--ink-mid);line-height:1.8;margin-bottom:28px;font-weight:300;}
+.tutorial-body .accent{color:var(--gold);}
+.tutorial-dots{display:flex;gap:6px;justify-content:center;margin-bottom:24px;}
+.tutorial-dot{width:4px;height:4px;border-radius:50%;background:var(--gold-line);transition:background 0.3s,transform 0.3s;}
+.tutorial-dot.active{background:var(--gold);transform:scale(1.4);}
+.tutorial-actions{display:flex;gap:10px;align-items:center;}
+.tutorial-skip{background:none;border:none;font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:var(--ink-mid);cursor:pointer;padding:8px;opacity:0.5;font-weight:300;transition:opacity 0.2s;}
+.tutorial-skip:hover{opacity:1;}
+.tutorial-next{background:var(--gold);color:var(--bg);border:none;border-radius:99px;padding:10px 28px;font-size:8px;font-weight:400;letter-spacing:0.2em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;}
+.tutorial-next:hover{opacity:0.85;}
+.tutorial-hold-demo{
+  width:60px;height:60px;border-radius:50%;
+  border:1.5px solid var(--gold-line);
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:16px;
+  position:relative;
+}
+.tutorial-hold-demo::after{
+  content:'';position:absolute;inset:-4px;border-radius:50%;
+  border:1px solid var(--gold);
+  opacity:0;animation:tutPulse 2s ease-in-out infinite;
+}
+@keyframes tutPulse{0%,100%{opacity:0;transform:scale(0.95);}50%{opacity:0.4;transform:scale(1.05);}}
+.tutorial-hold-dot{width:8px;height:8px;border-radius:50%;background:var(--gold);opacity:0.6;}
 </style>
 </head>
 <body>
@@ -1470,9 +1523,16 @@ body{background:var(--bg);color:var(--ink);font-family:var(--sans);min-height:10
   <header class="id-bar">
     <div class="wordmark">Palal<span class="premium-badge">✦ Local</span></div>
     <div class="id-right">
-      <button class="tutorial-help-btn" id="helpBtn">?</button>
-      <button class="ghost" id="themeBtn">◐</button>
-    </div>
+  <button class="tutorial-help-btn" id="helpBtn">?</button>
+  <button class="ghost" id="themeBtn">◐</button>
+  <!-- Sign In Button -->
+  <button id="signInGoogle" style="background-color:#4285f4;color:white;border:none;padding:6px 14px;border-radius:4px;font-size:11px;cursor:pointer;margin-left:8px;">Sign in</button>
+  <!-- User Info (hidden until logged in) -->
+  <div id="userInfo" style="display:none;align-items:center;gap:8px;margin-left:8px;">
+    <span style="font-size:11px;color:var(--ink);">Welcome, <span id="userName">Guest</span>!</span>
+    <button id="logoutBtn" style="background-color:#dc3545;color:white;border:none;padding:4px 12px;border-radius:4px;font-size:10px;cursor:pointer;">Logout</button>
+  </div>
+</div>
   </header>
   <div class="header-rule"></div>
 
@@ -1868,7 +1928,9 @@ body{background:var(--bg);color:var(--ink);font-family:var(--sans);min-height:10
   <div class="lobby-notification" id="lobbyNotification"></div>
 </div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+
+</script>
 <script>
 // ═══════════════════════════════════════════════
 //  PALAL — FULL APP WITH CONFESSION
@@ -4032,6 +4094,183 @@ function init() {
   console.log('✦ Run runDiagnostic() to verify');
 }
 init();
+// ═══════════════════════════════════════════════
+//  TUTORIAL
+// ═══════════════════════════════════════════════
+let currentTutStep = 0;
+const TUTORIAL_TOTAL = 5;
+
+(function() {
+  const SEEN_KEY = 'palal_tutorial_seen_v1';
+  const overlay = document.getElementById('tutorialOverlay');
+  const nextBtn = document.getElementById('tutNext');
+  const skipBtn = document.getElementById('tutSkip');
+
+  function showTutStep(n) {
+    for (let i = 0; i < TUTORIAL_TOTAL; i++) {
+      const step = document.getElementById('tutStep' + i);
+      const dot = document.getElementById('tutDot' + i);
+      if (step) step.classList.toggle('active', i === n);
+      if (dot) dot.classList.toggle('active', i === n);
+    }
+    nextBtn.textContent = n === TUTORIAL_TOTAL - 1 ? 'Start Praying ✦' : 'Next →';
+    currentTutStep = n;
+  }
+
+  function closeTutorial() {
+    overlay.classList.remove('active');
+    localStorage.setItem(SEEN_KEY, '1');
+  }
+
+  nextBtn.addEventListener('click', function() {
+    if (currentTutStep < TUTORIAL_TOTAL - 1) {
+      showTutStep(currentTutStep + 1);
+    } else {
+      closeTutorial();
+    }
+  });
+  
+  skipBtn.addEventListener('click', closeTutorial);
+
+  // Show tutorial only on first visit
+  if (!localStorage.getItem(SEEN_KEY)) {
+    setTimeout(function() { overlay.classList.add('active'); }, 600);
+  }
+})();
+
+// ─── HELP BUTTON ──────────────────────────────
+document.getElementById('helpBtn').addEventListener('click', function() {
+  const overlay = document.getElementById('tutorialOverlay');
+  if (overlay) {
+    // Reset to first step
+    document.querySelectorAll('.tutorial-step').forEach(el => el.classList.remove('active'));
+    document.getElementById('tutStep0').classList.add('active');
+    document.querySelectorAll('.tutorial-dot').forEach((el, i) => {
+      el.classList.toggle('active', i === 0);
+    });
+    document.getElementById('tutNext').textContent = 'Next →';
+    overlay.classList.add('active');
+    currentTutStep = 0;
+  }
+});
+</script>
+  <!-- ─── TUTORIAL OVERLAY ─── -->
+  <div class="tutorial-overlay" id="tutorialOverlay">
+    <div class="tutorial-step active" id="tutStep0">
+      <div class="tutorial-icon">✦</div>
+      <div class="tutorial-title">Welcome to Palal</div>
+      <div class="tutorial-body">
+        Palal is the Hebrew word for <span class="accent">prayer</span> — to intercede, to entreat, to bring before God.<br><br>
+        This is your sacred space to pray, to listen, and to stand in the gap.
+      </div>
+    </div>
+    <div class="tutorial-step" id="tutStep1">
+      <div class="tutorial-icon">◈</div>
+      <div class="tutorial-title">Choose Your Mode</div>
+      <div class="tutorial-body">
+        Swipe the mode carousel to choose how you come before God today.<br><br>
+        <span class="accent">Petition</span> · <span class="accent">Lament</span> · <span class="accent">Thanksgiving</span> · <span class="accent">Adoration</span> · <span class="accent">Confession</span><br><br>
+        Each mode shapes the prayer and the scripture that meets you.
+      </div>
+    </div>
+    <div class="tutorial-step" id="tutStep2">
+      <div class="tutorial-hold-demo"><div class="tutorial-hold-dot"></div></div>
+      <div class="tutorial-title">Hold to Enter</div>
+      <div class="tutorial-body">
+        Type your prayer in the field, then <span class="accent">hold the white circle</span> until it fills.<br><br>
+        You'll enter the <span class="accent">Sanctuary</span> — a space of still prayer with rotating scripture.
+      </div>
+    </div>
+    <div class="tutorial-step" id="tutStep3">
+      <div class="tutorial-icon">◉</div>
+      <div class="tutorial-title">Map, Wall &amp; Modes</div>
+      <div class="tutorial-body">
+        <span class="accent">Map</span> — Pray for persecuted nations, conflict zones and disaster areas<br><br>
+        <span class="accent">Prayer Wall</span> — Share requests and join prayer circles<br><br>
+        <span class="accent">Modes</span> — Guided prayer, Temptation and Healing scripture
+      </div>
+    </div>
+    <div class="tutorial-step" id="tutStep4">
+      <div class="tutorial-icon">✦</div>
+      <div class="tutorial-title">Your Prayer DNA</div>
+      <div class="tutorial-body">
+        Every prayer builds your <span class="accent">DNA</span> — a living portrait of your prayer life.<br><br>
+        Profile shape, weekly rhythm, prayer streaks, and saved testimonies all live there.
+      </div>
+    </div>
+    <div class="tutorial-dots">
+      <div class="tutorial-dot active" id="tutDot0"></div>
+      <div class="tutorial-dot" id="tutDot1"></div>
+      <div class="tutorial-dot" id="tutDot2"></div>
+      <div class="tutorial-dot" id="tutDot3"></div>
+      <div class="tutorial-dot" id="tutDot4"></div>
+    </div>
+    <div class="tutorial-actions">
+      <button class="tutorial-skip" id="tutSkip">Skip</button>
+      <button class="tutorial-next" id="tutNext">Begin →</button>
+    </div>
+  </div>
+  <!-- Netlify Identity Widget -->
+<script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+
+<script>
+  // ─── NETLIFY IDENTITY ───
+  if (window.netlifyIdentity) {
+    window.netlifyIdentity.init();
+
+    // ─── GOOGLE SIGN-IN ───
+    const signInBtn = document.getElementById('signInGoogle');
+    const userInfo = document.getElementById('userInfo');
+    const userName = document.getElementById('userName');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    function showLoggedIn(user) {
+      if (signInBtn) signInBtn.style.display = 'none';
+      if (userInfo) {
+        userInfo.style.display = 'flex';
+        const name = user.user_metadata?.full_name || user.email || 'User';
+        if (userName) userName.textContent = name;
+      }
+    }
+
+    function showLoggedOut() {
+      if (signInBtn) signInBtn.style.display = 'inline-block';
+      if (userInfo) userInfo.style.display = 'none';
+      if (userName) userName.textContent = 'Guest';
+    }
+
+    // Check if already logged in
+    const currentUser = window.netlifyIdentity.currentUser();
+    if (currentUser) {
+      showLoggedIn(currentUser);
+    }
+
+    // Login event
+    window.netlifyIdentity.on('login', function(user) {
+      showLoggedIn(user);
+    });
+
+    // Logout event
+    window.netlifyIdentity.on('logout', function() {
+      showLoggedOut();
+    });
+
+    // Sign in button click
+    if (signInBtn) {
+      signInBtn.addEventListener('click', function() {
+        window.netlifyIdentity.open('login');
+      });
+    }
+
+    // Logout button click
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', function() {
+        window.netlifyIdentity.logout();
+      });
+    }
+  } else {
+    console.log('Netlify Identity not loaded');
+  }
 </script>
 </body>
 </html>
