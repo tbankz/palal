@@ -5453,18 +5453,21 @@
       milestones: { lastMilestone: 0 },
       modeSaved: { temptation: [], healing: [] }
 
-    };
-    // ─── SUPABASE SETUP ───
-    const SUPABASE_URL = 'https://reqokqqbedxpvemrsbtr.supabase.co';
-    const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY_HERE';
-    let supabase = null;
+    };// ─── SUPABASE SETUP ───
+const SUPABASE_URL = 'https://reqokqqbedxpvemrsbtr.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJlcW9rcXFiZWR4cHZlbXJzYnRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4MzExNDksImV4cCI6MjA5ODQwNzE0OX0.k7jq0ezYlWaUvWj97B7CS6fcAvuupHN7jQW9SqoS0';
+let supabase = null;
 
-    try {
-      supabase = window.supabase.createClient(SUPABASE_URL, eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJlcW9rcXFiZWR4cHZlbXJzYnRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4MzExNDksImV4cCI6MjA5ODQwNzE0OX0.k7jq0ezYlWaUvWj97B7CS6fcAvuupHN7 - j - QW9SqoS0);
-      console.log('✅ Supabase initialized');
-    } catch (e) {
-      console.warn('Supabase not loaded:', e);
-    }
+if (typeof window.supabase !== 'undefined' && window.supabase) {
+  try {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    console.log('✅ Supabase initialized');
+  } catch (e) {
+    console.warn('Supabase initialization error:', e);
+  }
+} else {
+  console.warn('⚠️ Supabase library not loaded');
+}
     function saveLocal() { localStorage.setItem(STORE, JSON.stringify(D)); }
 
     function extractTags(text) {
