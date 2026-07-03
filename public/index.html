@@ -8188,3 +8188,25 @@ function showVerse(index) {
 </body>
 
 </html>
+// ─── DELETE CIRCLE ───
+function deleteCircle(circleId) {
+  if (!confirm("Delete this circle?")) return;
+  
+  let index = -1;
+  for (let i = 0; i < D.circles.length; i++) {
+    if (D.circles[i].id === circleId) {
+      index = i;
+      break;
+    }
+  }
+  
+  if (index === -1) {
+    toast("❌ Circle not found");
+    return;
+  }
+  
+  D.circles.splice(index, 1);
+  saveLocal();
+  renderCircles();
+  toast("✕ Circle deleted");
+}
